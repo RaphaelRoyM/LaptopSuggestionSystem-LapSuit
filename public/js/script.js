@@ -1,3 +1,4 @@
+// script.js
 const modal = document.getElementById("modal");
 const brandSelect = document.getElementById("brandSelect");
 
