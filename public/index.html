@@ -1,197 +1,4 @@
-<!-- index.html
-<!DOCTYPE html>
-<html>
-
-<head>
-  <title>Laptop Suggestion System</title>
-  <style>
-    body {
-      font-family: Arial;
-      margin: 0;
-      background: linear-gradient(to right, #1e3c72, #2a5298);
-      color: white;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    .header img {
-      width: 80px;
-      margin-right: 20px;
-    }
-
-    .search-section {
-      text-align: center;
-      margin-top: 30px;
-    }
-
-    input[type="text"] {
-      padding: 10px;
-      width: 300px;
-      border-radius: 5px;
-      border: none;
-    }
-
-    button {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      background: orange;
-      font-weight: bold;
-    }
-
-    #preferencesModal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      color: black;
-      width: 400px;
-      max-height: 400px;
-      overflow-y: auto;
-      border-radius: 10px;
-      padding: 20px;
-      z-index: 1000;
-    }
-
-    #overlay {
-      display: none;
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      top: 0;
-      left: 0;
-    }
-
-    .close-btn {
-      float: right;
-      cursor: pointer;
-      font-size: 20px;
-    }
-
-    .laptop-card {
-      background: white;
-      color: black;
-      padding: 15px;
-      margin: 15px auto;
-      width: 70%;
-      border-radius: 10px;
-    }
-
-    .brand-item {
-      margin: 8px 0;
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="header">
-    <img src="https://cdn-icons-png.flaticon.com/512/1041/1041884.png">
-    <h1>Laptop Suggestion System</h1>
-  </div>
-
-  <div class="search-section">
-    <input type="text" placeholder="search by name">
-    <button>Search</button>
-    <br><br>
-    <button onclick="openModal()">Set Preferences</button>
-  </div>
-
-  <div id="overlay" onclick="closeModal()"></div>
-
-  <div id="preferencesModal">
-    <span class="close-btn" onclick="closeModal()">✖</span>
-    <h3>Select Laptop Brands</h3>
-    <div id="brandList"></div>
-    <br>
-    <button onclick="applyPreferences()">Apply</button>
-  </div>
-
-  <div id="laptopResults"></div>
-
-  <script>
-    function openModal() {
-      document.getElementById("preferencesModal").style.display = "block";
-      document.getElementById("overlay").style.display = "block";
-    }
-
-    function closeModal() {
-      document.getElementById("preferencesModal").style.display = "none";
-      document.getElementById("overlay").style.display = "none";
-    }
-
-    // Load Brands
-    fetch("/api/brands")
-      .then(res => res.json())
-      .then(data => {
-        const brandList = document.getElementById("brandList");
-        data.forEach(brand => {
-          const div = document.createElement("div");
-          div.className = "brand-item";
-          div.innerHTML = `
-            <label>
-                <input type="checkbox" value="${brand}">
-                ${brand}
-            </label>
-        `;
-          brandList.appendChild(div);
-        });
-      });
-
-    // Apply Preferences
-    function applyPreferences() {
-      const checked = document.querySelectorAll("#brandList input:checked");
-      const selectedBrands = Array.from(checked).map(cb => cb.value);
-
-      fetch("/api/laptops", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ brands: selectedBrands })
-      })
-        .then(res => res.json())
-        .then(data => {
-          const resultsDiv = document.getElementById("laptopResults");
-          resultsDiv.innerHTML = "";
-
-          if (data.length === 0) {
-            resultsDiv.innerHTML = "<p style='text-align:center;'>No laptops found</p>";
-            return;
-          }
-
-          data.forEach(laptop => {
-            const card = document.createElement("div");
-            card.className = "laptop-card";
-            card.innerHTML = `
-                <h3>${laptop["Product name"]}</h3>
-                <p><b>Brand:</b> ${laptop["Brand:"]}</p>
-                <p><b>Processor:</b> ${laptop["Processor"]}</p>
-                <p><b>RAM:</b> ${laptop["RAM"]}</p>
-                <p><b>Price:</b> ${laptop["Price"]}</p>
-            `;
-            resultsDiv.appendChild(card);
-          });
-
-          closeModal();
-        });
-    }
-  </script>
-
-</body>
-
-</html> -->
-
-
+<!-- index.html -->
 <!DOCTYPE html>
 <html>
 
@@ -354,9 +161,8 @@
       <div class="filter-left">
 
         <ul class="filter-options">
-          <li class="active">Brand</li>
-          <li>Price</li>
-          <li>Display</li>
+          <li class="active" onclick="showSection('brandSection')">Brand</li>
+          <li onclick="showSection('priceSection')">Price</li>
         </ul>
 
         <div class="apply-btn" onclick="applyFilter()">
@@ -364,11 +170,25 @@
         </div>
 
       </div>
-
       <!-- RIGHT SIDE -->
       <div class="filter-right">
-        <h3>Select Brands</h3>
-        <div id="brandList"></div>
+
+        <!-- BRAND SECTION -->
+        <div id="brandSection">
+          <h3>Select Brands</h3>
+          <div id="brandList"></div>
+        </div>
+
+        <!-- PRICE SECTION -->
+        <div id="priceSection" style="display:none;">
+          <h3>Select Maximum Price</h3>
+
+          <input type="number" id="priceInput" placeholder="Enter price limit">
+
+          <h4>Quick Select</h4>
+          <div id="quickPrices"></div>
+        </div>
+
       </div>
 
     </div>
@@ -378,6 +198,19 @@
 
   <script>
     let selectedBrands = [];
+
+    function showSection(sectionId) {
+      document.getElementById("brandSection").style.display = "none";
+      document.getElementById("priceSection").style.display = "none";
+
+      document.getElementById(sectionId).style.display = "block";
+
+      document.querySelectorAll(".filter-options li").forEach(li =>
+        li.classList.remove("active")
+      );
+
+      event.target.classList.add("active");
+    }
 
     function openFilter() {
       document.getElementById("filterPanel").style.display = "block";
@@ -406,19 +239,48 @@
         });
       });
 
+    //price fetch
+    fetch("/api/maxPrice")
+      .then(res => res.json())
+      .then(data => {
+
+        const max = data.maxPrice;
+
+        const quickValues = [30000, 40000, 50000, 70000, 80000, 100000, max];
+
+        const quickDiv = document.getElementById("quickPrices");
+
+        quickValues.forEach(value => {
+          const btn = document.createElement("button");
+          btn.style.margin = "5px";
+          btn.innerText = value;
+          btn.onclick = () => {
+            document.getElementById("priceInput").value = value;
+          };
+          quickDiv.appendChild(btn);
+        });
+      });
+
     function applyFilter() {
+
       const checked = document.querySelectorAll("#brandList input:checked");
-      selectedBrands = Array.from(checked).map(cb => cb.value);
+      const selectedBrands = Array.from(checked).map(cb => cb.value);
+
+      const priceLimit = parseInt(document.getElementById("priceInput").value);
 
       fetch("/api/laptops", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ brands: selectedBrands })
+        body: JSON.stringify({
+          brands: selectedBrands,
+          maxPrice: priceLimit
+        })
       })
         .then(res => res.json())
         .then(data => {
+
           const resultsDiv = document.getElementById("laptopResults");
           resultsDiv.innerHTML = "";
 
@@ -432,18 +294,20 @@
             const card = document.createElement("div");
             card.className = "laptop-card";
             card.innerHTML = `
-            <h3>${laptop["Product name"]}</h3>
-            <p><b>Brand:</b> ${laptop["Brand:"]}</p>
-            <p><b>Processor:</b> ${laptop["Processor"]}</p>
-            <p><b>RAM:</b> ${laptop["RAM"]}</p>
-            <p><b>Price:</b> ${laptop["Price"]}</p>
-          `;
+        <h3>${laptop["Product name"]}</h3>
+        <p><b>Brand:</b> ${laptop["Brand:"]}</p>
+        <p><b>Processor:</b> ${laptop["Processor"]}</p>
+        <p><b>RAM:</b> ${laptop["RAM"]}</p>
+        <p><b>Price:</b> ${laptop["Price"]}</p>
+      `;
             resultsDiv.appendChild(card);
           });
 
           closeFilter();
         });
     }
+
+
   </script>
 
 </body>

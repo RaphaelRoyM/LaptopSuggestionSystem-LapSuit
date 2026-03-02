@@ -37,20 +37,45 @@ app.get("/api/brands", (req, res) => {
 });
 
 /* ==========================
-   GET LAPTOPS BY BRANDS
+   GET LAPTOPS BY BRANDS + PRICE
 ========================== */
 app.post("/api/laptops", (req, res) => {
-  const { brands } = req.body;
+  const { brands, maxPrice } = req.body;
 
-  if (!brands || brands.length === 0) {
-    return res.json([]);
+  let filtered = laptops;
+
+  // Filter by brands
+  if (brands && brands.length > 0) {
+    filtered = filtered.filter(l =>
+      brands.includes(l["Brand:"].trim())
+    );
   }
 
-  const filtered = laptops.filter(l =>
-    brands.includes(l["Brand:"].trim())
-  );
+  // Filter by price
+  if (maxPrice) {
+    filtered = filtered.filter(l => {
+      const price = parseInt(
+        String(l["Price"]).replace(/[^\d]/g, "")
+      );
+      return price <= maxPrice;
+    });
+  }
 
   res.json(filtered);
+});
+
+
+/* ==========================
+   GET MAX PRICE FROM CSV
+========================== */
+app.get("/api/maxPrice", (req, res) => {
+  const prices = laptops.map(l =>
+    parseInt(String(l["Price"]).replace(/[^\d]/g, ""))
+  ).filter(p => !isNaN(p));
+
+  const maxPrice = Math.max(...prices);
+
+  res.json({ maxPrice });
 });
 
 app.listen(PORT, () => {
