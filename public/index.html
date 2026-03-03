@@ -161,8 +161,10 @@
       <div class="filter-left">
 
         <ul class="filter-options">
-          <li class="active" onclick="showSection('brandSection')">Brand</li>
-          <li onclick="showSection('priceSection')">Price</li>
+          <li class="active" onclick="showSection('brandSection', this)">Brand</li>
+          <li onclick="showSection('priceSection', this)">Price</li>
+          <li onclick="showSection('processorSection', this)">Processor</li>
+          <li onclick="showSection('displaySection', this)">Display</li>
         </ul>
 
         <div class="apply-btn" onclick="applyFilter()">
@@ -188,6 +190,38 @@
           <h4>Quick Select</h4>
           <div id="quickPrices"></div>
         </div>
+        <!-- PROCESSOR SECTION -->
+        <div id="processorSection" style="display:none;">
+
+          <h3>Select Processor Brand</h3>
+
+          <label>
+            <input type="checkbox" value="intel" onchange="updateProcessorOptions()"> Intel
+          </label><br>
+
+          <label>
+            <input type="checkbox" value="ryzen" onchange="updateProcessorOptions()"> Ryzen
+          </label>
+
+          <hr>
+
+          <h3>Select Processor Series</h3>
+          <div id="processorSeriesOptions"></div>
+
+        </div>
+
+        <!-- DISPLAY SECTION -->
+        <div id="displaySection" style="display:none;">
+
+          <h3>Display Resolution</h3>
+          <div id="resolutionOptions"></div>
+
+          <hr>
+
+          <h3>Refresh Rate</h3>
+          <div id="refreshRateOptions"></div>
+
+        </div>
 
       </div>
 
@@ -199,9 +233,12 @@
   <script>
     let selectedBrands = [];
 
-    function showSection(sectionId) {
+    function showSection(sectionId, el) {
+
       document.getElementById("brandSection").style.display = "none";
       document.getElementById("priceSection").style.display = "none";
+      document.getElementById("processorSection").style.display = "none";
+      document.getElementById("displaySection").style.display = "none";
 
       document.getElementById(sectionId).style.display = "block";
 
@@ -209,12 +246,77 @@
         li.classList.remove("active")
       );
 
-      event.target.classList.add("active");
+      el.classList.add("active");
     }
+
+    // Load Display Options
+    fetch("/api/displayOptions")
+      .then(res => res.json())
+      .then(data => {
+
+        const resolutionDiv = document.getElementById("resolutionOptions");
+        const refreshDiv = document.getElementById("refreshRateOptions");
+
+        // Resolution
+        data.resolutions.forEach(resolution => {
+          resolutionDiv.innerHTML += `
+        <label>
+          <input type="checkbox" value="${resolution}">
+          ${resolution}
+        </label><br>
+      `;
+        });
+
+        // Refresh Rate (ignore empty handled in backend)
+        data.refreshRates.forEach(rate => {
+          refreshDiv.innerHTML += `
+        <label>
+          <input type="checkbox" value="${rate}">
+          ${rate}
+        </label><br>
+      `;
+        });
+
+      });
 
     function openFilter() {
       document.getElementById("filterPanel").style.display = "block";
     }
+
+    function updateProcessorOptions() {
+
+      const checked = document.querySelectorAll(
+        "#processorSection input[type='checkbox']:checked"
+      );
+
+      const selected = Array.from(checked).map(cb => cb.value);
+
+      const container = document.getElementById("processorSeriesOptions");
+      container.innerHTML = "";
+
+      if (selected.includes("intel")) {
+        ["i3", "i5", "i7", "i9"].forEach(series => {
+          container.innerHTML += `
+        <label>
+          <input type="checkbox" value="${series}">
+          ${series}
+        </label><br>
+      `;
+        });
+      }
+
+      if (selected.includes("ryzen")) {
+        ["ryzen 3", "ryzen 5", "ryzen 7", "ryzen 9"].forEach(series => {
+          container.innerHTML += `
+        <label>
+          <input type="checkbox" value="${series}">
+          ${series}
+        </label><br>
+      `;
+        });
+      }
+    }
+
 
     function closeFilter() {
       document.getElementById("filterPanel").style.display = "none";
@@ -268,6 +370,32 @@
 
       const priceLimit = parseInt(document.getElementById("priceInput").value);
 
+      // Display resolution
+      const resolutions = Array.from(
+        document.querySelectorAll("#resolutionOptions input:checked")
+      ).map(cb => cb.value);
+
+      // Refresh rate
+      const refreshRates = Array.from(
+        document.querySelectorAll("#refreshRateOptions input:checked")
+      ).map(cb => cb.value);
+
+      // Processor brand
+      const processorBrands = Array.from(
+        document.querySelectorAll(
+          "#processorSection input[type='checkbox']:checked"
+        )
+      )
+        .map(cb => cb.value)
+        .filter(v => v === "intel" || v === "ryzen");
+
+      // Processor series
+      const processorSeries = Array.from(
+        document.querySelectorAll(
+          "#processorSeriesOptions input:checked"
+        )
+      ).map(cb => cb.value);
+
       fetch("/api/laptops", {
         method: "POST",
         headers: {
@@ -275,7 +403,11 @@
         },
         body: JSON.stringify({
           brands: selectedBrands,
-          maxPrice: priceLimit
+          maxPrice: priceLimit,
+          processorBrands,
+          processorSeries,
+          resolutions,
+          refreshRates
         })
       })
         .then(res => res.json())

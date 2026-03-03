@@ -40,18 +40,25 @@ app.get("/api/brands", (req, res) => {
    GET LAPTOPS BY BRANDS + PRICE
 ========================== */
 app.post("/api/laptops", (req, res) => {
-  const { brands, maxPrice } = req.body;
+  const {
+    brands,
+    maxPrice,
+    processorBrands,
+    processorSeries,
+    resolutions,
+    refreshRates
+  } = req.body;
 
   let filtered = laptops;
 
-  // Filter by brands
+  // Brand filter
   if (brands && brands.length > 0) {
     filtered = filtered.filter(l =>
       brands.includes(l["Brand:"].trim())
     );
   }
 
-  // Filter by price
+  // Price filter
   if (maxPrice) {
     filtered = filtered.filter(l => {
       const price = parseInt(
@@ -61,9 +68,42 @@ app.post("/api/laptops", (req, res) => {
     });
   }
 
+  // Processor Brand Filter (Intel / Ryzen)
+  if (processorBrands && processorBrands.length > 0) {
+    filtered = filtered.filter(l => {
+      const proc = l["Processor"]?.toLowerCase() || "";
+      return processorBrands.some(p =>
+        proc.includes(p.toLowerCase())
+      );
+    });
+  }
+
+  // Processor Series Filter (i3, i5 etc)
+  if (processorSeries && processorSeries.length > 0) {
+    filtered = filtered.filter(l => {
+      const proc = l["Processor"]?.toLowerCase() || "";
+      return processorSeries.some(series =>
+        proc.includes(series.toLowerCase())
+      );
+    });
+  }
+
+  // Display Resolution Filter
+  if (resolutions && resolutions.length > 0) {
+    filtered = filtered.filter(l =>
+      resolutions.includes(l["Display Resolution"]?.trim())
+    );
+  }
+
+  // Display Refresh Rate Filter
+  if (refreshRates && refreshRates.length > 0) {
+    filtered = filtered.filter(l =>
+      refreshRates.includes(l["Display Refresh Rate"]?.trim())
+    );
+  }
+
   res.json(filtered);
 });
-
 
 /* ==========================
    GET MAX PRICE FROM CSV
@@ -80,4 +120,33 @@ app.get("/api/maxPrice", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+});
+
+/* ==========================
+   GET DISPLAY OPTIONS
+========================== */
+app.get("/api/displayOptions", (req, res) => {
+
+  const resolutions = [
+    ...new Set(
+      laptops
+        .map(l => l["Display Resolution"]?.trim())
+        .filter(Boolean)
+    )
+  ];
+
+  // 🔥 Correct refresh rate sorting (ascending numeric)
+  const refreshRates = [
+    ...new Set(
+      laptops
+        .map(l => l["Display Refresh Rate"]?.trim())
+        .filter(Boolean)
+    )
+  ].sort((a, b) => {
+    const numA = parseInt(a.replace(/[^\d]/g, ""));
+    const numB = parseInt(b.replace(/[^\d]/g, ""));
+    return numA - numB;
+  });
+
+  res.json({ resolutions, refreshRates });
 });
