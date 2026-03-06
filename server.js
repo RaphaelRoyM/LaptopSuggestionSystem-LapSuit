@@ -28,6 +28,18 @@ fs.createReadStream(csvPath)
     console.error("Error loading CSV:", err.message);
   });
 
+
+function getDisplaySize(displayText) {
+  if (!displayText) return null;
+
+  const match = displayText.match(/(\d+(\.\d+)?)\s*"/);
+  if (match) {
+    return parseFloat(match[1]);
+  }
+
+  return null;
+}
+
 /* ==========================
    GET UNIQUE BRANDS
 ========================== */
@@ -46,7 +58,12 @@ app.post("/api/laptops", (req, res) => {
     processorBrands,
     processorSeries,
     resolutions,
-    refreshRates
+    refreshRates,
+    warranties,
+    ram,
+    memory,      // ✅ ADD THIS
+    keyboards,    // ✅ ADD THIS
+    displaySizes
   } = req.body;
 
   let filtered = laptops;
@@ -56,6 +73,44 @@ app.post("/api/laptops", (req, res) => {
     filtered = filtered.filter(l =>
       brands.includes(l["Brand:"].trim())
     );
+  }
+
+  // MEMORY FILTER
+  if (memory && memory.length > 0) {
+
+    filtered = filtered.filter(l => {
+
+      const drive = l["Hard drive"];
+      if (!drive) return false;
+
+      const match = drive.match(/\d+/);
+      if (!match) return false;
+
+      let value = parseInt(match[0]);
+
+      if (drive.toLowerCase().includes("tb")) {
+        value = value * 1024;
+      }
+
+      return memory.includes(value);
+
+    });
+
+  }
+
+  // KEYBOARD FILTER
+  if (keyboards && keyboards.length > 0) {
+
+    filtered = filtered.filter(l => {
+
+      const kb = l["Keyboard"]?.toLowerCase() || "";
+
+      return keyboards.some(k =>
+        kb.includes(k.toLowerCase())
+      );
+
+    });
+
   }
 
   // Price filter
@@ -78,6 +133,13 @@ app.post("/api/laptops", (req, res) => {
     });
   }
 
+  // Filter by display size
+  if (displaySizes && displaySizes.length > 0) {
+    filtered = filtered.filter(l => {
+      const size = getDisplaySize(l["Display"]);
+      return size && displaySizes.includes(size);
+    });
+  }
   // Processor Series Filter (i3, i5 etc)
   if (processorSeries && processorSeries.length > 0) {
     filtered = filtered.filter(l => {
@@ -87,6 +149,8 @@ app.post("/api/laptops", (req, res) => {
       );
     });
   }
+
+
 
   // Display Resolution Filter
   if (resolutions && resolutions.length > 0) {
@@ -101,8 +165,40 @@ app.post("/api/laptops", (req, res) => {
       refreshRates.includes(l["Display Refresh Rate"]?.trim())
     );
   }
+  //waranty filter
+  if (warranties && warranties.length > 0) {
+    filtered = filtered.filter(l =>
+      warranties.includes(l["Warranty"]?.trim())
+    );
+  }
+  // RAM Filter
+  if (ram && ram.length > 0) {
+    filtered = filtered.filter(l => {
+      const ramField = l["RAM"];
+      if (!ramField) return false;
+
+      const match = ramField.match(/\d+/);
+      const ramValue = match ? parseInt(match[0]) : null;
+
+      return ram.includes(ramValue);
+    });
+  }
 
   res.json(filtered);
+});
+
+/* ==========================
+ GET DISPLAY SIZES
+========================== */
+app.get("/api/displaySizes", (req, res) => {
+
+  const sizes = laptops
+    .map(l => getDisplaySize(l["Display"]))
+    .filter(size => size !== null);
+
+  const uniqueSizes = [...new Set(sizes)].sort((a, b) => a - b);
+
+  res.json(uniqueSizes);
 });
 
 /* ==========================
@@ -120,6 +216,78 @@ app.get("/api/maxPrice", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+});
+
+/* ==========================
+   GET WARRANTY + RAM OPTIONS
+========================== */
+app.get("/api/specOptions", (req, res) => {
+
+  // ✅ WARRANTY (remove blanks)
+  const warranties = [
+    ...new Set(
+      laptops
+        .map(l => l["Warranty"]?.trim())
+        .filter(w => w && w !== "")
+    )
+  ];
+
+
+  // MEMORY (Hard drive column)
+  const memoryValues = [
+    ...new Set(
+      laptops
+        .map(l => {
+          const drive = l["Hard drive"];
+          if (!drive) return null;
+
+          const match = drive.match(/\d+/);
+          if (!match) return null;
+
+          let value = parseInt(match[0]);
+
+          if (drive.toLowerCase().includes("tb")) {
+            value = value * 1024;
+          }
+
+          return value;
+        })
+        .filter(Boolean)
+    )
+  ].sort((a, b) => a - b);
+
+  // KEYBOARD
+  const keyboards = [
+    ...new Set(
+      laptops
+        .map(l => l["Keyboard"])
+        .filter(val => val && val.trim() !== "")
+    )
+  ];
+
+
+  // ✅ RAM (extract numeric value only, remove DDR, GB spacing issues)
+  const ramValues = [
+    ...new Set(
+      laptops
+        .map(l => {
+          const ramField = l["RAM"];
+          if (!ramField) return null;
+
+          // Extract first number (e.g., 16 from "16GB DDR4")
+          const match = ramField.match(/\d+/);
+          return match ? parseInt(match[0]) : null;
+        })
+        .filter(Boolean)
+    )
+  ].sort((a, b) => a - b); // Ascending order
+
+  res.json({
+    warranties,
+    ramValues,
+    memoryValues,
+    keyboards
+  });
 });
 
 /* ==========================

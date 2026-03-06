@@ -134,6 +134,28 @@
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
+
+    /* KEYBOARD LIST - VERTICAL */
+    .keyboard-item {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    /* This ensures vertical stacking */
+    #keyboardList {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scroll only the keyboard name if too long */
+    .keyboard-text {
+      margin-left: 10px;
+      max-width: 500px;
+      /* adjust width */
+      overflow-x: auto;
+      white-space: nowrap;
+    }
   </style>
 </head>
 
@@ -165,6 +187,10 @@
           <li onclick="showSection('priceSection', this)">Price</li>
           <li onclick="showSection('processorSection', this)">Processor</li>
           <li onclick="showSection('displaySection', this)">Display</li>
+          <li onclick="showSection('warrantySection', this)">Warranty</li>
+          <li onclick="showSection('ramSection', this)">RAM</li>
+          <li onclick="showSection('memorySection', this)">Memory</li>
+          <li onclick="showSection('keyboardSection', this)">Keyboard</li>
         </ul>
 
         <div class="apply-btn" onclick="applyFilter()">
@@ -213,14 +239,41 @@
         <!-- DISPLAY SECTION -->
         <div id="displaySection" style="display:none;">
 
+          <h3>Display Size</h3>
+          <div id="displaySizeList" class="filter-list"></div>
+
+          <hr>
+          <h3>Refresh Rate</h3>
+          <div id="refreshRateOptions"></div>
+          <hr>
+
           <h3>Display Resolution</h3>
           <div id="resolutionOptions"></div>
 
-          <hr>
+        </div>
 
-          <h3>Refresh Rate</h3>
-          <div id="refreshRateOptions"></div>
+        <!-- WARRANTY SECTION -->
+        <div id="warrantySection" style="display:none;">
+          <h3>Select Warranty</h3>
+          <div id="warrantyList"></div>
+        </div>
 
+        <!-- RAM SECTION -->
+        <div id="ramSection" style="display:none;">
+          <h3>Select RAM (GB)</h3>
+          <div id="ramList"></div>
+        </div>
+
+        <!-- MEMORY SECTION -->
+        <div id="memorySection" style="display:none;">
+          <h3>Select Storage (ROM)</h3>
+          <div id="memoryList"></div>
+        </div>
+
+        <!-- KEYBOARD SECTION -->
+        <div id="keyboardSection" style="display:none;">
+          <h3>Select Keyboard</h3>
+          <div id="keyboardList"></div>
         </div>
 
       </div>
@@ -230,217 +283,7 @@
 
   <div id="laptopResults"></div>
 
-  <script>
-    let selectedBrands = [];
-
-    function showSection(sectionId, el) {
-
-      document.getElementById("brandSection").style.display = "none";
-      document.getElementById("priceSection").style.display = "none";
-      document.getElementById("processorSection").style.display = "none";
-      document.getElementById("displaySection").style.display = "none";
-
-      document.getElementById(sectionId).style.display = "block";
-
-      document.querySelectorAll(".filter-options li").forEach(li =>
-        li.classList.remove("active")
-      );
-
-      el.classList.add("active");
-    }
-
-    // Load Display Options
-    fetch("/api/displayOptions")
-      .then(res => res.json())
-      .then(data => {
-
-        const resolutionDiv = document.getElementById("resolutionOptions");
-        const refreshDiv = document.getElementById("refreshRateOptions");
-
-        // Resolution
-        data.resolutions.forEach(resolution => {
-          resolutionDiv.innerHTML += `
-        <label>
-          <input type="checkbox" value="${resolution}">
-          ${resolution}
-        </label><br>
-      `;
-        });
-
-        // Refresh Rate (ignore empty handled in backend)
-        data.refreshRates.forEach(rate => {
-          refreshDiv.innerHTML += `
-        <label>
-          <input type="checkbox" value="${rate}">
-          ${rate}
-        </label><br>
-      `;
-        });
-
-      });
-
-    function openFilter() {
-      document.getElementById("filterPanel").style.display = "block";
-    }
-
-    function updateProcessorOptions() {
-
-      const checked = document.querySelectorAll(
-        "#processorSection input[type='checkbox']:checked"
-      );
-
-      const selected = Array.from(checked).map(cb => cb.value);
-
-      const container = document.getElementById("processorSeriesOptions");
-      container.innerHTML = "";
-
-      if (selected.includes("intel")) {
-        ["i3", "i5", "i7", "i9"].forEach(series => {
-          container.innerHTML += `
-        <label>
-          <input type="checkbox" value="${series}">
-          ${series}
-        </label><br>
-      `;
-        });
-      }
-
-      if (selected.includes("ryzen")) {
-        ["ryzen 3", "ryzen 5", "ryzen 7", "ryzen 9"].forEach(series => {
-          container.innerHTML += `
-        <label>
-          <input type="checkbox" value="${series}">
-          ${series}
-        </label><br>
-      `;
-        });
-      }
-    }
-
-
-    function closeFilter() {
-      document.getElementById("filterPanel").style.display = "none";
-    }
-
-    // Load brands dynamically
-    fetch("/api/brands")
-      .then(res => res.json())
-      .then(data => {
-        const brandList = document.getElementById("brandList");
-
-        data.forEach(brand => {
-          const div = document.createElement("div");
-          div.className = "brand-item";
-          div.innerHTML = `
-            <label>
-              <input type="checkbox" value="${brand}">
-              ${brand}
-            </label>
-          `;
-          brandList.appendChild(div);
-        });
-      });
-
-    //price fetch
-    fetch("/api/maxPrice")
-      .then(res => res.json())
-      .then(data => {
-
-        const max = data.maxPrice;
-
-        const quickValues = [30000, 40000, 50000, 70000, 80000, 100000, max];
-
-        const quickDiv = document.getElementById("quickPrices");
-
-        quickValues.forEach(value => {
-          const btn = document.createElement("button");
-          btn.style.margin = "5px";
-          btn.innerText = value;
-          btn.onclick = () => {
-            document.getElementById("priceInput").value = value;
-          };
-          quickDiv.appendChild(btn);
-        });
-      });
-
-    function applyFilter() {
-
-      const checked = document.querySelectorAll("#brandList input:checked");
-      const selectedBrands = Array.from(checked).map(cb => cb.value);
-
-      const priceLimit = parseInt(document.getElementById("priceInput").value);
-
-      // Display resolution
-      const resolutions = Array.from(
-        document.querySelectorAll("#resolutionOptions input:checked")
-      ).map(cb => cb.value);
-
-      // Refresh rate
-      const refreshRates = Array.from(
-        document.querySelectorAll("#refreshRateOptions input:checked")
-      ).map(cb => cb.value);
-
-      // Processor brand
-      const processorBrands = Array.from(
-        document.querySelectorAll(
-          "#processorSection input[type='checkbox']:checked"
-        )
-      )
-        .map(cb => cb.value)
-        .filter(v => v === "intel" || v === "ryzen");
-
-      // Processor series
-      const processorSeries = Array.from(
-        document.querySelectorAll(
-          "#processorSeriesOptions input:checked"
-        )
-      ).map(cb => cb.value);
-
-      fetch("/api/laptops", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          brands: selectedBrands,
-          maxPrice: priceLimit,
-          processorBrands,
-          processorSeries,
-          resolutions,
-          refreshRates
-        })
-      })
-        .then(res => res.json())
-        .then(data => {
-
-          const resultsDiv = document.getElementById("laptopResults");
-          resultsDiv.innerHTML = "";
-
-          if (data.length === 0) {
-            resultsDiv.innerHTML = "<p style='text-align:center;'>No laptops found</p>";
-            closeFilter();
-            return;
-          }
-
-          data.forEach(laptop => {
-            const card = document.createElement("div");
-            card.className = "laptop-card";
-            card.innerHTML = `
-        <h3>${laptop["Product name"]}</h3>
-        <p><b>Brand:</b> ${laptop["Brand:"]}</p>
-        <p><b>Processor:</b> ${laptop["Processor"]}</p>
-        <p><b>RAM:</b> ${laptop["RAM"]}</p>
-        <p><b>Price:</b> ${laptop["Price"]}</p>
-      `;
-            resultsDiv.appendChild(card);
-          });
-
-          closeFilter();
-        });
-    }
-
-
-  </script>
+  <script src="js/script.js"></script>
 
 </body>
 
