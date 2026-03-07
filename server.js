@@ -63,7 +63,9 @@ app.post("/api/laptops", (req, res) => {
     ram,
     memory,      // ✅ ADD THIS
     keyboards,    // ✅ ADD THIS
-    displaySizes
+    displaySizes,
+    operatingSystems,
+    weight,
   } = req.body;
 
   let filtered = laptops;
@@ -171,6 +173,31 @@ app.post("/api/laptops", (req, res) => {
       warranties.includes(l["Warranty"]?.trim())
     );
   }
+
+  // OPERATING SYSTEM FILTER
+  if (operatingSystems && operatingSystems.length > 0) {
+    filtered = filtered.filter(l =>
+      operatingSystems.includes(l["Operating System"]?.trim())
+    );
+  }
+
+  // WEIGHT FILTER (range)
+  if (weight) {
+
+    filtered = filtered.filter(l => {
+
+      const w = l["Weight"];
+      if (!w) return false;
+
+      const match = w.match(/[\d.]+/);
+      const value = match ? parseFloat(match[0]) : null;
+
+      return value && value <= weight;
+
+    });
+
+  }
+
   // RAM Filter
   if (ram && ram.length > 0) {
     filtered = filtered.filter(l => {
@@ -223,6 +250,30 @@ app.listen(PORT, () => {
 ========================== */
 app.get("/api/specOptions", (req, res) => {
 
+  // OPERATING SYSTEM
+  const operatingSystems = [
+    ...new Set(
+      laptops
+        .map(l => l["Operating System"]?.trim())
+        .filter(val => val && val !== "")
+    )
+  ].sort();
+
+  // WEIGHT (extract numeric kg value)
+  const weightValues = [
+    ...new Set(
+      laptops
+        .map(l => {
+          const w = l["Weight"];
+          if (!w) return null;
+
+          const match = w.match(/[\d.]+/);
+          return match ? parseFloat(match[0]) : null;
+        })
+        .filter(Boolean)
+    )
+  ].sort((a, b) => a - b);
+
   // ✅ WARRANTY (remove blanks)
   const warranties = [
     ...new Set(
@@ -233,20 +284,20 @@ app.get("/api/specOptions", (req, res) => {
   ];
 
 
-  // MEMORY (Hard drive column)
+  // MEMORY VALUES
   const memoryValues = [
     ...new Set(
       laptops
         .map(l => {
-          const drive = l["Hard drive"];
+          const drive = l["Hard drive"] || l["1 TB HDD"];
           if (!drive) return null;
 
-          const match = drive.match(/\d+/);
+          const match = drive.match(/(\d+)\s*(TB|GB)/i);
           if (!match) return null;
 
-          let value = parseInt(match[0]);
+          let value = parseInt(match[1]);
 
-          if (drive.toLowerCase().includes("tb")) {
+          if (match[2].toUpperCase() === "TB") {
             value = value * 1024;
           }
 
@@ -286,7 +337,9 @@ app.get("/api/specOptions", (req, res) => {
     warranties,
     ramValues,
     memoryValues,
-    keyboards
+    keyboards,
+    operatingSystems,
+    weightValues
   });
 });
 
@@ -317,4 +370,28 @@ app.get("/api/displayOptions", (req, res) => {
   });
 
   res.json({ resolutions, refreshRates });
+});
+
+/* ==========================
+   SEARCH LAPTOP BY NAME (FUZZY)
+========================== */
+app.get("/api/laptops/search", (req, res) => {
+
+  const query = req.query.q?.toLowerCase() || "";
+
+  if (!query) {
+    return res.json([]);
+  }
+
+  const results = laptops.filter(l => {
+
+    const name = l["Product name"]?.toLowerCase() || "";
+
+    // simple fuzzy match
+    return name.includes(query);
+
+  });
+
+  res.json(results);
+
 });

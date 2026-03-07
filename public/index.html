@@ -167,7 +167,7 @@
   </div>
 
   <div class="search-section">
-    <input type="text" placeholder="search by name">
+    <input type="text" id="searchInput" placeholder="Search laptop by name" onkeyup="searchLaptop()" />
     <button>Search</button>
     <br><br>
     <button onclick="openFilter()">Set Preferences</button>
@@ -191,6 +191,8 @@
           <li onclick="showSection('ramSection', this)">RAM</li>
           <li onclick="showSection('memorySection', this)">Memory</li>
           <li onclick="showSection('keyboardSection', this)">Keyboard</li>
+          <li onclick="showSection('osSection', this)">Operating System</li>
+          <li onclick="showSection('weightSection', this)">Weight</li>
         </ul>
 
         <div class="apply-btn" onclick="applyFilter()">
@@ -274,6 +276,17 @@
         <div id="keyboardSection" style="display:none;">
           <h3>Select Keyboard</h3>
           <div id="keyboardList"></div>
+        </div>
+        <!-- OPERATING SYSTEM -->
+        <div id="osSection" style="display:none;">
+          <h3>Select Operating System</h3>
+          <div id="osList"></div>
+        </div>
+
+        <!-- WEIGHT -->
+        <div id="weightSection" style="display:none;">
+          <h3>Select Weight</h3>
+          <div id="weightList"></div>
         </div>
 
       </div>

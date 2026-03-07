@@ -18,6 +18,12 @@ function applyFilter() {
     document.querySelectorAll("#warrantyList input:checked")
   ).map(cb => cb.value);
 
+  const operatingSystems = Array.from(
+    document.querySelectorAll("#osList input:checked")
+  ).map(cb => cb.value);
+
+  const weight = document.querySelector("#weightList input:checked")?.value;
+
   const selectedRam = Array.from(
     document.querySelectorAll("#ramList input:checked")
   ).map(cb => parseInt(cb.value));
@@ -84,6 +90,8 @@ function applyFilter() {
       resolutions,
       refreshRates,
       displaySizes,
+      operatingSystems,
+      weight
     })
   })
     .then(res => res.json())
@@ -162,7 +170,9 @@ function showSection(sectionId, el) {
     "warrantySection",
     "ramSection",
     "memorySection",
-    "keyboardSection"
+    "keyboardSection",
+    "osSection",
+    "weightSection"
   ];
 
   sections.forEach(id => {
@@ -233,10 +243,42 @@ async function loadBrands() {
 
 // Search
 async function searchLaptop() {
-  const query = document.getElementById("searchInput").value;
+
+  const query = document.getElementById("searchInput").value.trim();
+
+  if (query.length < 2) {
+    document.getElementById("laptopResults").innerHTML = "";
+    return;
+  }
+
   const res = await fetch(`/api/laptops/search?q=${query}`);
   const data = await res.json();
-  displayResults(data);
+
+  const resultsDiv = document.getElementById("laptopResults");
+  resultsDiv.innerHTML = "";
+
+  if (data.length === 0) {
+    resultsDiv.innerHTML = "<p style='text-align:center;'>No laptops found</p>";
+    return;
+  }
+
+  data.slice(0, 10).forEach(laptop => {
+
+    const card = document.createElement("div");
+    card.className = "laptop-card";
+
+    card.innerHTML = `
+      <h3>${laptop["Product name"]}</h3>
+      <p><b>Brand:</b> ${laptop["Brand:"]}</p>
+      <p><b>Processor:</b> ${laptop["Processor"]}</p>
+      <p><b>RAM:</b> ${laptop["RAM"]}</p>
+      <p><b>Price:</b> ${laptop["Price"]}</p>
+    `;
+
+    resultsDiv.appendChild(card);
+
+  });
+
 }
 
 // Display laptops
@@ -263,6 +305,43 @@ fetch("/api/specOptions")
   .then(res => res.json())
   .then(data => {
 
+    //Operating system
+    const osDiv = document.getElementById("osList");
+
+    data.operatingSystems.forEach(os => {
+
+      const div = document.createElement("div");
+
+      div.innerHTML = `
+    <label>
+      <input type="checkbox" value="${os}">
+      ${os}
+    </label>
+  `;
+
+      osDiv.appendChild(div);
+
+    });
+
+    //weight
+    const weightDiv = document.getElementById("weightList");
+
+    const weightRanges = [1, 2, 3, 4, 5];
+
+    weightRanges.forEach(w => {
+
+      const div = document.createElement("div");
+
+      div.innerHTML = `
+    <label>
+      <input type="radio" name="weightRange" value="${w}">
+      Upto ${w} Kg
+    </label>
+  `;
+
+      weightDiv.appendChild(div);
+
+    });
     // Warranty
     const warrantyDiv = document.getElementById("warrantyList");
     data.warranties.forEach(w => {
@@ -283,10 +362,12 @@ fetch("/api/specOptions")
 
       const div = document.createElement("div");
 
+      const displayValue = m >= 1024 ? (m / 1024) + " TB" : m + " GB";
+
       div.innerHTML = `
     <label>
       <input type="checkbox" value="${m}">
-      ${m >= 1024 ? (m / 1024) + " TB" : m + " GB"}
+      ${displayValue}
     </label>
   `;
 
