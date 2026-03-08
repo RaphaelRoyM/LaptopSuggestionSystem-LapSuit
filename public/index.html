@@ -5,52 +5,79 @@
 <head>
   <title>Laptop Suggestion System</title>
 
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      background: linear-gradient(to right, #1e3c72, #2a5298);
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
       color: white;
     }
+
+    /* HEADER */
 
     .header {
       display: flex;
       align-items: center;
-      padding: 20px;
+      padding: 20px 40px;
       background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
     }
 
     .header img {
-      width: 70px;
-      margin-right: 20px;
+      width: 60px;
+      margin-right: 15px;
     }
+
+    .header h1 {
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* SEARCH AREA */
 
     .search-section {
       text-align: center;
-      margin-top: 30px;
+      margin-top: 40px;
     }
 
     input[type="text"] {
-      padding: 10px;
-      width: 300px;
-      border-radius: 5px;
+      padding: 12px 15px;
+      width: 320px;
+      border-radius: 30px;
       border: none;
+      outline: none;
+      font-size: 15px;
+      transition: 0.3s;
+    }
+
+    input[type="text"]:focus {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
     }
 
     button {
-      padding: 10px 15px;
-      border-radius: 5px;
+      padding: 10px 20px;
+      border-radius: 25px;
       border: none;
       cursor: pointer;
-      font-weight: bold;
-      background: orange;
+      font-weight: 600;
+      background: linear-gradient(45deg, #ff9800, #ffb74d);
+      color: black;
+      transition: 0.3s;
     }
 
     button:hover {
-      opacity: 0.9;
+      transform: scale(1.08);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
 
-    /* FULL SCREEN FILTER PANEL */
+    /* FILTER PANEL */
+
     #filterPanel {
       position: fixed;
       top: 0;
@@ -61,6 +88,17 @@
       color: black;
       display: none;
       z-index: 2000;
+      animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+      }
+
+      to {
+        transform: translateX(0);
+      }
     }
 
     .filter-container {
@@ -68,15 +106,16 @@
       height: 100%;
     }
 
-    /* LEFT SECTION */
+    /* LEFT FILTER */
+
     .filter-left {
-      width: 30%;
-      background: #f1f1f1;
-      padding: 20px;
+      width: 28%;
+      background: #f6f6f6;
+      padding: 25px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      border-right: 1px solid #ccc;
+      border-right: 1px solid #ddd;
     }
 
     .filter-options {
@@ -86,8 +125,14 @@
 
     .filter-options li {
       padding: 12px;
+      margin-bottom: 6px;
+      border-radius: 6px;
       cursor: pointer;
-      border-radius: 5px;
+      transition: 0.2s;
+    }
+
+    .filter-options li:hover {
+      background: #e1e8ff;
     }
 
     .filter-options li.active {
@@ -95,26 +140,33 @@
       color: white;
     }
 
+    /* APPLY BUTTON */
+
     .apply-btn {
-      padding: 12px;
+      padding: 14px;
       background: #2a5298;
       color: white;
       text-align: center;
+      border-radius: 8px;
+      font-weight: 600;
       cursor: pointer;
-      border-radius: 5px;
+      transition: 0.3s;
     }
 
-    /* RIGHT SECTION */
+    .apply-btn:hover {
+      background: #1e3c72;
+      transform: scale(1.05);
+    }
+
+    /* RIGHT FILTER */
+
     .filter-right {
-      width: 70%;
-      padding: 20px;
+      width: 72%;
+      padding: 25px;
       overflow-y: auto;
     }
 
-    .brand-item {
-      margin: 10px 0;
-      font-size: 16px;
-    }
+    /* CLOSE BUTTON */
 
     .close-filter {
       position: absolute;
@@ -122,39 +174,166 @@
       right: 30px;
       font-size: 28px;
       cursor: pointer;
+      transition: 0.3s;
     }
 
-    /* Laptop Cards */
-    .laptop-card {
-      background: white;
-      color: black;
-      padding: 15px;
-      margin: 15px auto;
-      width: 70%;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    .close-filter:hover {
+      transform: rotate(90deg);
     }
 
-    /* KEYBOARD LIST - VERTICAL */
-    .keyboard-item {
-      display: flex;
-      align-items: center;
-      margin: 10px 0;
+    /* FILTER ITEMS */
+
+    label {
+      cursor: pointer;
+      transition: 0.2s;
     }
 
-    /* This ensures vertical stacking */
+    label:hover {
+      color: #2a5298;
+    }
+
+    /* KEYBOARD LIST */
+
     #keyboardList {
       display: flex;
       flex-direction: column;
     }
 
-    /* Scroll only the keyboard name if too long */
+    .keyboard-item {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+    }
+
     .keyboard-text {
       margin-left: 10px;
       max-width: 500px;
-      /* adjust width */
       overflow-x: auto;
       white-space: nowrap;
+    }
+
+    /* LAPTOP RESULTS GRID */
+
+    #laptopResults {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 25px;
+      padding: 40px;
+    }
+
+    /* LAPTOP CARD */
+
+    .laptop-card {
+      background: white;
+      color: black;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      transition: 0.35s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .laptop-card:hover {
+      transform: translateY(-10px) scale(1.03);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    }
+
+    /* CARD TOP BORDER EFFECT */
+
+    .laptop-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, #ff9800, #ff5722);
+    }
+
+    /* CARD TITLE */
+
+    .laptop-card h3 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #1e3c72;
+    }
+
+    /* CARD TEXT */
+
+    .laptop-card p {
+      margin: 6px 0;
+    }
+
+    /* SCROLLBAR STYLE */
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #2a5298;
+      border-radius: 4px;
+    }
+
+    /* laptop image style */
+    .laptop-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* DETAILS MODAL */
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 3000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-content {
+      background: white;
+      color: black;
+      margin: 8% auto;
+      padding: 25px;
+      width: 500px;
+      border-radius: 10px;
+      position: relative;
+      animation: pop 0.3s ease;
+    }
+
+    @keyframes pop {
+      from {
+        transform: scale(0.7)
+      }
+
+      to {
+        transform: scale(1)
+      }
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    /* the laptop img in view details */
+    .details-img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 15px;
     }
   </style>
 </head>
@@ -171,6 +350,9 @@
     <button>Search</button>
     <br><br>
     <button onclick="openFilter()">Set Preferences</button>
+    <button onclick="openRecommendModal()" class="recommend-btn">
+      Get Recommended
+    </button>
   </div>
 
   <!-- FULL SCREEN FILTER PANEL -->
@@ -295,6 +477,65 @@
   </div>
 
   <div id="laptopResults"></div>
+
+  <!-- Laptop Details Modal -->
+  <div id="detailsModal" class="modal">
+
+    <div class="modal-content">
+
+      <span class="close-modal" onclick="closeDetails()">✖</span>
+
+      <div id="detailsBody"></div>
+
+    </div>
+
+  </div>
+
+  <!-- recommendation modal -->
+  <div id="recommendModal" class="modal">
+
+    <div class="modal-content">
+
+      <span class="close-modal" onclick="closeRecommendModal()">✖</span>
+
+      <h2>What will you use the laptop for?</h2>
+
+      <div id="purposeOptions">
+
+        <label>
+          <input type="radio" name="purpose" value="student">
+          Basic Student
+        </label><br>
+
+        <label>
+          <input type="radio" name="purpose" value="programming">
+          Programming
+        </label><br>
+
+        <label>
+          <input type="radio" name="purpose" value="coding_gaming">
+          Coding + Gaming
+        </label><br>
+
+        <label>
+          <input type="radio" name="purpose" value="gaming_editing">
+          High-end Gaming / Editing
+        </label><br>
+
+        <label>
+          <input type="radio" name="purpose" value="office">
+          Office Work
+        </label><br>
+
+      </div>
+
+      <br>
+
+      <button onclick="submitPurpose()">OK</button>
+
+    </div>
+
+  </div>
 
   <script src="js/script.js"></script>
 

@@ -1,4 +1,6 @@
 // script.js
+localStorage.clear();
+
 let selectedBrands = [];
 
 function openFilter() {
@@ -22,8 +24,9 @@ function applyFilter() {
     document.querySelectorAll("#osList input:checked")
   ).map(cb => cb.value);
 
-  const weight = document.querySelector("#weightList input:checked")?.value;
-
+  const weight = parseFloat(
+    document.querySelector("#weightList input:checked")?.value
+  );
   const selectedRam = Array.from(
     document.querySelectorAll("#ramList input:checked")
   ).map(cb => parseInt(cb.value));
@@ -109,13 +112,30 @@ function applyFilter() {
       data.forEach(laptop => {
         const card = document.createElement("div");
         card.className = "laptop-card";
+        const brand = laptop["Brand:"];
+
+        const imageURL =
+          "https://source.unsplash.com/400x300/?laptop," +
+          encodeURIComponent(brand);
+
         card.innerHTML = `
-        <h3>${laptop["Product name"]}</h3>
-        <p><b>Brand:</b> ${laptop["Brand:"]}</p>
-        <p><b>Processor:</b> ${laptop["Processor"]}</p>
-        <p><b>RAM:</b> ${laptop["RAM"]}</p>
-        <p><b>Price:</b> ${laptop["Price"]}</p>
-      `;
+<img 
+  src="${imageURL}" 
+  class="laptop-img"
+  onerror="this.src='https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=60'"
+>
+
+<h3>${laptop["Product name"]}</h3>
+
+<p><b>Brand:</b> ${laptop["Brand:"]}</p>
+<p><b>Processor:</b> ${laptop["Processor"]}</p>
+<p><b>RAM:</b> ${laptop["RAM"]}</p>
+<p><b>Price:</b> ₹${laptop["Price"]}</p>
+
+<button onclick='viewDetails(${JSON.stringify(laptop)})'>
+View Details
+</button>
+`;
         resultsDiv.appendChild(card);
       });
 
@@ -479,14 +499,125 @@ fetch("/api/maxPrice")
     });
   });
 
-// // Search by product name
-// router.get("/search", (req, res) => {
-//   const query = req.query.q?.toLowerCase() || "";
+//view details button 
+function viewDetails(laptop) {
 
-//   const filtered = laptops.filter(l =>
-//     l["Product name"]?.toLowerCase().includes(query)
-//   );
+  const modal = document.getElementById("detailsModal");
+  const body = document.getElementById("detailsBody");
 
-//   res.json(filtered);
-// });
+  const brand = laptop["Brand:"];
+
+  const imageURL =
+    "https://source.unsplash.com/600x400/?laptop," +
+    encodeURIComponent(brand);
+
+  body.innerHTML = `
+
+    <img 
+      src="${imageURL}" 
+      class="details-img"
+      onerror="this.src='https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=60'"
+    >
+
+    <h2>${laptop["Product name"]}</h2>
+
+    <p><b>Brand:</b> ${laptop["Brand:"]}</p>
+    <p><b>Processor:</b> ${laptop["Processor"]}</p>
+    <p><b>RAM:</b> ${laptop["RAM"]}</p>
+    <p><b>Storage:</b> ${laptop["Hard drive"]}</p>
+    <p><b>Display:</b> ${laptop["Display"]}</p>
+    <p><b>Operating System:</b> ${laptop["Operating System"]}</p>
+    <p><b>Weight:</b> ${laptop["Weight"]}</p>
+    <p><b>Price:</b> ₹${laptop["Price"]}</p>
+
+  `;
+
+  modal.style.display = "block";
+}
+
+//close button details modal
+function closeDetails() {
+  document.getElementById("detailsModal").style.display = "none";
+}
+
+//close view details modal
+window.addEventListener("click", function (event) {
+
+  const modal = document.getElementById("detailsModal");
+
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
+
+});
+
+//recommendation modal function
+function openRecommendModal() {
+
+  document.getElementById("recommendModal").style.display = "block";
+
+}
+
+function closeRecommendModal() {
+
+  document.getElementById("recommendModal").style.display = "none";
+
+}
+
+//save user answer
+function submitPurpose() {
+
+  const selected = document.querySelector("input[name='purpose']:checked");
+
+  if (!selected) {
+    alert("Please select an option");
+    return;
+  }
+
+  const purpose = selected.value;
+
+  localStorage.setItem("laptopPurpose", purpose);
+
+  fetch("/api/recommend", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ purpose })
+  })
+    .then(res => res.json())
+    .then(displayRecommended);
+
+  closeRecommendModal();
+}
+
+//display recommended laptops
+function displayRecommended(data) {
+
+  const resultsDiv = document.getElementById("laptopResults");
+  resultsDiv.innerHTML = "";
+
+  if (data.length === 0) {
+    resultsDiv.innerHTML = "<p>No laptops found</p>";
+    return;
+  }
+
+  data.forEach(laptop => {
+
+    const card = document.createElement("div");
+    card.className = "laptop-card";
+
+    card.innerHTML = `
+      <h3>${laptop["Product name"]}</h3>
+      <p><b>Brand:</b> ${laptop["Brand:"]}</p>
+      <p><b>Processor:</b> ${laptop["Processor"]}</p>
+      <p><b>RAM:</b> ${laptop["RAM"]}</p>
+      <p><b>Price:</b> ₹${laptop["Price"]}</p>
+    `;
+
+    resultsDiv.appendChild(card);
+
+  });
+
+}
 loadDisplaySizes();
