@@ -395,3 +395,70 @@ app.get("/api/laptops/search", (req, res) => {
   res.json(results);
 
 });
+
+/* ==========================
+   RECOMMEND LAPTOPS
+========================== */
+app.post("/api/recommend", (req, res) => {
+
+  const { purpose } = req.body;
+
+  let filtered = laptops;
+
+  function getRamValue(ramText) {
+    if (!ramText) return 0;
+    const match = ramText.match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
+  }
+
+  const purposeRules = {
+
+    student: {
+      processors: ["i3", "ryzen 3"],
+      minRam: 4
+    },
+
+    programming: {
+      processors: ["i5", "ryzen 5"],
+      minRam: 8
+    },
+
+    coding_gaming: {
+      processors: ["i5", "i7", "ryzen 5", "ryzen 7"],
+      minRam: 16
+    },
+
+    gaming_editing: {
+      processors: ["i7", "i9", "ryzen 7", "ryzen 9"],
+      minRam: 16
+    },
+
+    office: {
+      processors: ["i3", "i5"],
+      minRam: 8
+    }
+
+  };
+
+  const rule = purposeRules[purpose];
+
+  if (!rule) {
+    return res.json([]);
+  }
+
+  filtered = filtered.filter(l => {
+
+    const processor = (l["Processor"] || "").toLowerCase();
+    const ramValue = getRamValue(l["RAM"]);
+
+    const processorMatch = rule.processors.some(p =>
+      processor.includes(p)
+    );
+
+    return processorMatch && ramValue >= rule.minRam;
+
+  });
+
+  res.json(filtered);
+
+});

@@ -290,24 +290,44 @@
     .modal {
       display: none;
       position: fixed;
-      z-index: 3000;
+      z-index: 2000;
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
+
       background: rgba(0, 0, 0, 0.6);
+
+      justify-content: center;
+      align-items: center;
+
+      overflow-y: auto;
     }
 
     .modal-content {
       background: white;
       color: black;
-      margin: 8% auto;
       padding: 25px;
       width: 500px;
       border-radius: 10px;
       position: relative;
       animation: pop 0.3s ease;
+
+      max-height: 85vh;
+      overflow-y: auto;
     }
+
+    /* make recommendation modal scrollable */
+    #recommendModal .modal-content {
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    /* #recommendModal .modal-content {
+      max-height: 80vh;
+      overflow-y: auto;
+      padding-bottom: 40px;
+    } */
 
     @keyframes pop {
       from {

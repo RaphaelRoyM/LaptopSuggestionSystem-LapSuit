@@ -532,7 +532,7 @@ function viewDetails(laptop) {
 
   `;
 
-  modal.style.display = "block";
+  modal.style.display = "flex";
 }
 
 //close button details modal
@@ -554,8 +554,7 @@ window.addEventListener("click", function (event) {
 //recommendation modal function
 function openRecommendModal() {
 
-  document.getElementById("recommendModal").style.display = "block";
-
+  document.getElementById("recommendModal").style.display = "flex";
 }
 
 function closeRecommendModal() {
@@ -598,7 +597,7 @@ function displayRecommended(data) {
   resultsDiv.innerHTML = "";
 
   if (data.length === 0) {
-    resultsDiv.innerHTML = "<p>No laptops found</p>";
+    resultsDiv.innerHTML = "<p style='text-align:center;'>No laptops found</p>";
     return;
   }
 
@@ -607,13 +606,30 @@ function displayRecommended(data) {
     const card = document.createElement("div");
     card.className = "laptop-card";
 
+    const brand = laptop["Brand:"];
+
+    const imageURL =
+      "https://source.unsplash.com/400x300/?laptop," +
+      encodeURIComponent(brand);
+
     card.innerHTML = `
-      <h3>${laptop["Product name"]}</h3>
-      <p><b>Brand:</b> ${laptop["Brand:"]}</p>
-      <p><b>Processor:</b> ${laptop["Processor"]}</p>
-      <p><b>RAM:</b> ${laptop["RAM"]}</p>
-      <p><b>Price:</b> ₹${laptop["Price"]}</p>
-    `;
+<img 
+  src="${imageURL}" 
+  class="laptop-img"
+  onerror="this.src='https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=60'"
+>
+
+<h3>${laptop["Product name"]}</h3>
+
+<p><b>Brand:</b> ${laptop["Brand:"]}</p>
+<p><b>Processor:</b> ${laptop["Processor"]}</p>
+<p><b>RAM:</b> ${laptop["RAM"]}</p>
+<p><b>Price:</b> ₹${laptop["Price"]}</p>
+
+<button onclick='viewDetails(${JSON.stringify(laptop)})'>
+View Details
+</button>
+`;
 
     resultsDiv.appendChild(card);
 
