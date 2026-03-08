@@ -1,5 +1,43 @@
 // script.js
-localStorage.clear();
+// localStorage.clear();
+function createLaptopCard(laptop, showScore = false, index = null) {
+
+  const brand = laptop["Brand:"];
+
+  const imageURL =
+    "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=60";
+
+  let badge = "";
+
+  if (index === 0) {
+    badge = "<span class='top-badge'>🏆 Top Recommendation</span>";
+  }
+
+  return `
+  <div class="laptop-card">
+
+    <img src="${imageURL}" class="laptop-img">
+
+    <h3>${laptop["Product name"]}</h3>
+
+    ${badge}
+
+    ${showScore && laptop.score ? `
+      <p style="color:green;">⭐ Match Score: ${laptop.score}</p>
+    ` : ""}
+
+    <p><b>Brand:</b> ${laptop["Brand:"]}</p>
+    <p><b>Processor:</b> ${laptop["Processor"]}</p>
+    <p><b>RAM:</b> ${laptop["RAM"]}</p>
+    <p><b>Price:</b> ₹${laptop["Price"]}</p>
+
+    <button onclick='viewDetails(${JSON.stringify(laptop)})'>
+      View Details
+    </button>
+
+  </div>
+  `;
+}
 
 let selectedBrands = [];
 
@@ -99,7 +137,8 @@ function applyFilter() {
   })
     .then(res => res.json())
     .then(data => {
-
+      const resultCount = document.getElementById("resultCount");
+      resultCount.innerHTML = `Showing ${data.length} laptops`;
       const resultsDiv = document.getElementById("laptopResults");
       resultsDiv.innerHTML = "";
 
@@ -110,36 +149,11 @@ function applyFilter() {
       }
 
       data.forEach(laptop => {
-        const card = document.createElement("div");
-        card.className = "laptop-card";
-        const brand = laptop["Brand:"];
-
-        const imageURL =
-          "https://source.unsplash.com/400x300/?laptop," +
-          encodeURIComponent(brand);
-
-        card.innerHTML = `
-<img 
-  src="${imageURL}" 
-  class="laptop-img"
-  onerror="this.src='https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=60'"
->
-
-<h3>${laptop["Product name"]}</h3>
-
-<p><b>Brand:</b> ${laptop["Brand:"]}</p>
-<p><b>Processor:</b> ${laptop["Processor"]}</p>
-<p><b>RAM:</b> ${laptop["RAM"]}</p>
-<p><b>Price:</b> ₹${laptop["Price"]}</p>
-
-<button onclick='viewDetails(${JSON.stringify(laptop)})'>
-View Details
-</button>
-`;
-        resultsDiv.appendChild(card);
+        resultsDiv.innerHTML += createLaptopCard(laptop);
       });
 
       closeFilter();
+
     });
 }
 
@@ -264,12 +278,7 @@ async function loadBrands() {
 // Search
 async function searchLaptop() {
 
-  const query = document.getElementById("searchInput").value.trim();
-
-  if (query.length < 2) {
-    document.getElementById("laptopResults").innerHTML = "";
-    return;
-  }
+  const query = document.getElementById("searchInput").value;
 
   const res = await fetch(`/api/laptops/search?q=${query}`);
   const data = await res.json();
@@ -282,43 +291,13 @@ async function searchLaptop() {
     return;
   }
 
-  data.slice(0, 10).forEach(laptop => {
-
-    const card = document.createElement("div");
-    card.className = "laptop-card";
-
-    card.innerHTML = `
-      <h3>${laptop["Product name"]}</h3>
-      <p><b>Brand:</b> ${laptop["Brand:"]}</p>
-      <p><b>Processor:</b> ${laptop["Processor"]}</p>
-      <p><b>RAM:</b> ${laptop["RAM"]}</p>
-      <p><b>Price:</b> ${laptop["Price"]}</p>
-    `;
-
-    resultsDiv.appendChild(card);
-
+  data.forEach(laptop => {
+    resultsDiv.innerHTML += createLaptopCard(laptop);
   });
 
 }
 
-// Display laptops
-function displayResults(laptops) {
-  const resultsDiv = document.getElementById("results");
-  resultsDiv.innerHTML = "";
 
-  laptops.slice(0, 10).forEach(laptop => {
-    const div = document.createElement("div");
-    div.className = "laptop-card";
-    div.innerHTML = `
-      <h3>${laptop["Product name"]}</h3>
-      <p><strong>Brand:</strong> ${laptop["Brand:"]}</p>
-      <p><strong>Processor:</strong> ${laptop["Processor"]}</p>
-      <p><strong>RAM:</strong> ${laptop["RAM"]}</p>
-      <p><strong>Price:</strong> ${laptop["Price"]}</p>
-    `;
-    resultsDiv.appendChild(div);
-  });
-}
 
 // Load Warranty Options
 fetch("/api/specOptions")
@@ -639,45 +618,19 @@ function submitPurpose() {
 function displayRecommended(data) {
 
   const resultsDiv = document.getElementById("laptopResults");
+  const resultCount = document.getElementById("resultCount");
+
   resultsDiv.innerHTML = "";
+
+  resultCount.innerHTML = `Showing ${data.length} recommended laptops`;
 
   if (data.length === 0) {
     resultsDiv.innerHTML = "<p style='text-align:center;'>No laptops found</p>";
     return;
   }
 
-  data.forEach(laptop => {
-
-    const card = document.createElement("div");
-    card.className = "laptop-card";
-
-    const brand = laptop["Brand:"];
-
-    const imageURL =
-      "https://source.unsplash.com/400x300/?laptop," +
-      encodeURIComponent(brand);
-
-    card.innerHTML = `
-<img 
-  src="${imageURL}" 
-  class="laptop-img"
-  onerror="this.src='https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=60'"
->
-
-<h3>${laptop["Product name"]}</h3>
-
-<p><b>Brand:</b> ${laptop["Brand:"]}</p>
-<p><b>Processor:</b> ${laptop["Processor"]}</p>
-<p><b>RAM:</b> ${laptop["RAM"]}</p>
-<p><b>Price:</b> ₹${laptop["Price"]}</p>
-
-<button onclick='viewDetails(${JSON.stringify(laptop)})'>
-View Details
-</button>
-`;
-
-    resultsDiv.appendChild(card);
-
+  data.forEach((laptop, index) => {
+    resultsDiv.innerHTML += createLaptopCard(laptop, true, index);
   });
 
 }

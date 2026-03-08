@@ -211,6 +211,23 @@ app.post("/api/laptops", (req, res) => {
     });
   }
 
+  filtered.sort((a, b) => {
+
+    const ramA = parseInt(a["RAM"]?.match(/\d+/)?.[0] || 0);
+    const ramB = parseInt(b["RAM"]?.match(/\d+/)?.[0] || 0);
+
+    const priceA = parseInt(String(a["Price"]).replace(/[^\d]/g, "")) || 0;
+    const priceB = parseInt(String(b["Price"]).replace(/[^\d]/g, "")) || 0;
+
+    // RAM descending
+    if (ramA !== ramB) {
+      return ramB - ramA;
+    }
+
+    // Price ascending
+    return priceA - priceB;
+
+  });
   res.json(filtered);
 });
 
@@ -399,15 +416,10 @@ app.get("/api/laptops/search", (req, res) => {
 /* ==========================
    RECOMMEND LAPTOPS
 ========================== */
+
 app.post("/api/recommend", (req, res) => {
 
-  const { purpose, budget, ram, portability, displaySize } = req.body; let filtered = laptops;
-
-  function getRamValue(ramText) {
-    if (!ramText) return 0;
-    const match = ramText.match(/\d+/);
-    return match ? parseInt(match[0]) : 0;
-  }
+  const { purpose, budget, ram, portability, displaySize } = req.body;
 
   const purposeRules = {
 
@@ -440,78 +452,86 @@ app.post("/api/recommend", (req, res) => {
 
   const rule = purposeRules[purpose];
 
-  if (!rule) {
-    return res.json([]);
-  }
+  let scored = laptops.map(l => {
 
-  filtered = filtered.filter(l => {
+    let score = 0;
 
     const processor = (l["Processor"] || "").toLowerCase();
-    const ramValue = getRamValue(l["RAM"]);
 
-    const processorMatch = rule.processors.some(p =>
-      processor.includes(p)
-    );
+    const ramMatch = l["RAM"]?.match(/\d+/);
+    const ramValue = ramMatch ? parseInt(ramMatch[0]) : 0;
 
-    return processorMatch && ramValue >= rule.minRam;
+    const price = parseInt(String(l["Price"]).replace(/[^\d]/g, ""));
+
+    const weight = parseFloat(l["Weight"]);
+
+    const displayMatch = l["Display"]?.match(/\d+(\.\d+)?/);
+    const display = displayMatch ? parseFloat(displayMatch[0]) : 0;
+
+    // Processor score
+    if (rule.processors.some(p => processor.includes(p))) {
+      score += 40;
+    }
+
+    // RAM score (based on purpose requirement)
+    if (ramValue >= rule.minRam) {
+      score += 30;
+    }
+
+    // Extra RAM preference (only if user didn't choose "any")
+    if (ram && ram !== "any") {
+
+      const userRam = parseInt(ram);
+
+      if (ramValue >= userRam) {
+        score += 10;
+      }
+
+    }
+
+    // Budget score
+    if (budget && price <= budget) {
+      score += 20;
+    }
+
+    // Portability score
+    if (portability === "yes" && weight && weight <= 1.8) {
+      score += 10;
+    }
+
+    // Display score
+    if (displaySize && Math.round(display) === parseInt(displaySize)) {
+      score += 10;
+    }
+
+    return { ...l, score };
 
   });
-  // -------------------------
-  // BUDGET FILTER
-  // -------------------------
 
-  if (budget) {
+  // Sort by score (best first)
+  scored.sort((a, b) => {
 
-    filtered = filtered.filter(l => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
 
-      const price = parseInt(String(l["Price"]).replace(/[^\d]/g, ""));
+    const ramA = parseInt(a["RAM"]?.match(/\d+/)?.[0] || 0);
+    const ramB = parseInt(b["RAM"]?.match(/\d+/)?.[0] || 0);
 
-      return price <= budget;
+    const priceA = parseInt(String(a["Price"]).replace(/[^\d]/g, "")) || 0;
+    const priceB = parseInt(String(b["Price"]).replace(/[^\d]/g, "")) || 0;
 
-    });
+    if (ramA !== ramB) {
+      return ramB - ramA;
+    }
 
-  }
+    return priceA - priceB;
 
+  });
+  // Remove laptops with 0 score
+  scored = scored.filter(l => l.score > 0);
 
-  // -------------------------
-  // RAM FILTER
-  // -------------------------
-
-  if (ram) {
-
-    filtered = filtered.filter(l => {
-
-      const match = l["RAM"]?.match(/\d+/);
-      const value = match ? parseInt(match[0]) : 0;
-
-      return value >= ram;
-
-    });
-
-  }
-  if (portability === "yes") {
-
-    filtered = filtered.filter(l => {
-
-      const weight = parseFloat(l["Weight"]);
-
-      return weight && weight <= 1.8;
-
-    });
-
-  }
-  if (displaySize) {
-
-    filtered = filtered.filter(l => {
-
-      const match = l["Display"]?.match(/\d+(\.\d+)?/);
-      const size = match ? parseFloat(match[0]) : 0;
-
-      return Math.round(size) === parseInt(displaySize);
-
-    });
-
-  }
-  res.json(filtered);
+  // Return top laptops
+  res.json(scored.slice(0, 20));
 
 });
