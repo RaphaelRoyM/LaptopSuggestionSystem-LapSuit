@@ -569,20 +569,65 @@ function submitPurpose() {
   const selected = document.querySelector("input[name='purpose']:checked");
 
   if (!selected) {
-    alert("Please select an option");
+    alert("Please select laptop purpose");
     return;
   }
 
   const purpose = selected.value;
 
+  const portability =
+    document.querySelector("input[name='portability']:checked")?.value;
+
+  const displaySize =
+    document.getElementById("recommendDisplay").value;
+
+  const budget = document.getElementById("recommendBudget").value;
+
+  const ram = parseInt(document.getElementById("recommendRam").value);
+
+  const purposeRules = {
+
+    student: { minRam: 4 },
+    programming: { minRam: 8 },
+    coding_gaming: { minRam: 16 },
+    gaming_editing: { minRam: 16 },
+    office: { minRam: 8 }
+
+  };
+
+  const minRequired = purposeRules[purpose].minRam;
+
+  if (ram < minRequired) {
+
+    alert(
+      "⚠ It is not recommended to use " +
+      ram +
+      "GB RAM for '" +
+      purpose.replace("_", " ") +
+      "'. Minimum recommended RAM is " +
+      minRequired +
+      "GB."
+    );
+
+    return;
+  }
+
   localStorage.setItem("laptopPurpose", purpose);
+  localStorage.setItem("budget", budget);
+  localStorage.setItem("ram", ram);
 
   fetch("/api/recommend", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ purpose })
+    body: JSON.stringify({
+      purpose,
+      budget,
+      ram,
+      portability,
+      displaySize
+    })
   })
     .then(res => res.json())
     .then(displayRecommended);
@@ -636,4 +681,5 @@ View Details
   });
 
 }
+
 loadDisplaySizes();

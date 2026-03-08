@@ -512,6 +512,7 @@
   </div>
 
   <!-- recommendation modal -->
+  <!-- Recommendation Modal -->
   <div id="recommendModal" class="modal">
 
     <div class="modal-content">
@@ -549,7 +550,52 @@
 
       </div>
 
-      <br>
+      <hr>
+
+      <!-- Budget Question -->
+      <h3>Enter your budget</h3>
+      <input type="number" id="recommendBudget" placeholder="Enter budget in ₹" style="width: 100%; padding:8px;">
+
+      <br><br>
+
+      <!-- RAM Question -->
+      <h3>Select RAM you prefer</h3>
+
+      <select id="recommendRam" style="width: 100%; padding:8px;">
+        <option value="4">4 GB</option>
+        <option value="8">8 GB</option>
+        <option value="16">16 GB</option>
+        <option value="32">32 GB</option>
+      </select>
+
+      <br><br>
+
+      <h3>Do you need portability?</h3>
+
+      <label>
+        <input type="radio" name="portability" value="yes">
+        Yes (Lightweight laptop)
+      </label><br>
+
+      <label>
+        <input type="radio" name="portability" value="no">
+        No preference
+      </label>
+
+      <br><br>
+
+      <h3>Select preferred display size</h3>
+
+      <select id="recommendDisplay">
+        <option value="">Any</option>
+        <option value="13">13 inch</option>
+        <option value="14">14 inch</option>
+        <option value="15">15 inch</option>
+        <option value="16">16 inch</option>
+        <option value="17">17 inch</option>
+      </select>
+
+      <br><br>
 
       <button onclick="submitPurpose()">OK</button>
 

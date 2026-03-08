@@ -401,9 +401,7 @@ app.get("/api/laptops/search", (req, res) => {
 ========================== */
 app.post("/api/recommend", (req, res) => {
 
-  const { purpose } = req.body;
-
-  let filtered = laptops;
+  const { purpose, budget, ram, portability, displaySize } = req.body; let filtered = laptops;
 
   function getRamValue(ramText) {
     if (!ramText) return 0;
@@ -458,7 +456,62 @@ app.post("/api/recommend", (req, res) => {
     return processorMatch && ramValue >= rule.minRam;
 
   });
+  // -------------------------
+  // BUDGET FILTER
+  // -------------------------
 
+  if (budget) {
+
+    filtered = filtered.filter(l => {
+
+      const price = parseInt(String(l["Price"]).replace(/[^\d]/g, ""));
+
+      return price <= budget;
+
+    });
+
+  }
+
+
+  // -------------------------
+  // RAM FILTER
+  // -------------------------
+
+  if (ram) {
+
+    filtered = filtered.filter(l => {
+
+      const match = l["RAM"]?.match(/\d+/);
+      const value = match ? parseInt(match[0]) : 0;
+
+      return value >= ram;
+
+    });
+
+  }
+  if (portability === "yes") {
+
+    filtered = filtered.filter(l => {
+
+      const weight = parseFloat(l["Weight"]);
+
+      return weight && weight <= 1.8;
+
+    });
+
+  }
+  if (displaySize) {
+
+    filtered = filtered.filter(l => {
+
+      const match = l["Display"]?.match(/\d+(\.\d+)?/);
+      const size = match ? parseFloat(match[0]) : 0;
+
+      return Math.round(size) === parseInt(displaySize);
+
+    });
+
+  }
   res.json(filtered);
 
 });
