@@ -332,6 +332,9 @@ node server.js
 3. Open browser
 http://localhost:3000
 
+i have deployed the project in RENDER the lik is given below:
+https://laptopsuggestionsystem-lapsuit.onrender.com
+
 <!-- Limitations -->
   - Dataset quality is limited.
   - Recommendation logic is rule-based.
