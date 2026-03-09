@@ -366,6 +366,8 @@ Side-by-side.
 5. Real Product Images
   Integrate product images from APIs or scraped sources.
 
+6. I i have more time this website would not be dropdown oriented website. I didn't got the dataset as i expected. i expect data set with completely filled values in a structured way. the current dataset had values like, 8gb, 8GB, 8 Gb. in every column is such a manner. for this i had to convert my most of the time to mannual data cleaning in google sheets.
+
 **What I Learned**
 This project helped me understand:
     - Data cleaning challenges.
