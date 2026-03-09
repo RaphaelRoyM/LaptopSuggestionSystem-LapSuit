@@ -5,10 +5,19 @@ const path = require("path");
 const csv = require("csv-parser");
 
 const app = express();
+
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+
+loadCSV().then(() => {
+
+  app.listen(PORT, () => {
+    console.log("Server running on port " + PORT);
+  });
+
 });
+
+
 app.use(express.json());
 app.use(express.static("public"));
 
@@ -269,9 +278,6 @@ app.get("/api/maxPrice", (req, res) => {
   res.json({ maxPrice });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
 
 /* ==========================
    GET WARRANTY + RAM OPTIONS
