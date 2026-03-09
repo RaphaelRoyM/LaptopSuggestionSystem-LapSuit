@@ -1,5 +1,15 @@
 // script.js
-// localStorage.clear();
+
+// Clear localStorage only when server starts
+if (!sessionStorage.getItem("appLoaded")) {
+
+  localStorage.clear();
+
+  sessionStorage.setItem("appLoaded", "true");
+
+}
+
+
 function createLaptopCard(laptop, showScore = false, index = null) {
 
   const brand = laptop["Brand:"];
@@ -114,6 +124,23 @@ function applyFilter() {
     )
   ).map(cb => cb.value);
 
+  // Save preferences to localStorage
+  localStorage.setItem("preferences", JSON.stringify({
+    brands: selectedBrands,
+    warranties: selectedWarranties,
+    ram: selectedRam,
+    memory: selectedMemory,
+    keyboards: selectedKeyboards,
+    processorBrands,
+    processorSeries,
+    resolutions,
+    refreshRates,
+    displaySizes,
+    operatingSystems,
+    weight,
+    priceLimit
+  }));
+
   fetch("/api/laptops", {
     method: "POST",
     headers: {
@@ -137,6 +164,8 @@ function applyFilter() {
   })
     .then(res => res.json())
     .then(data => {
+      localStorage.setItem("laptopResults", JSON.stringify(data));
+      localStorage.setItem("resultType", "filter");
       const resultCount = document.getElementById("resultCount");
       resultCount.innerHTML = `Showing ${data.length} laptops`;
       const resultsDiv = document.getElementById("laptopResults");
@@ -591,9 +620,13 @@ function submitPurpose() {
     return;
   }
 
-  localStorage.setItem("laptopPurpose", purpose);
-  localStorage.setItem("budget", budget);
-  localStorage.setItem("ram", ram);
+  localStorage.setItem("recommendAnswers", JSON.stringify({
+    purpose,
+    budget,
+    ram,
+    portability,
+    displaySize
+  }));
 
   fetch("/api/recommend", {
     method: "POST",
@@ -617,6 +650,9 @@ function submitPurpose() {
 //display recommended laptops
 function displayRecommended(data) {
 
+  localStorage.setItem("laptopResults", JSON.stringify(data));
+  localStorage.setItem("resultType", "recommend");
+
   const resultsDiv = document.getElementById("laptopResults");
   const resultCount = document.getElementById("resultCount");
 
@@ -632,6 +668,97 @@ function displayRecommended(data) {
   data.forEach((laptop, index) => {
     resultsDiv.innerHTML += createLaptopCard(laptop, true, index);
   });
+
+}
+
+//Restore Page After Reload
+window.addEventListener("load", () => {
+
+  const savedResults = localStorage.getItem("laptopResults");
+  const resultType = localStorage.getItem("resultType");
+
+  if (!savedResults) return;
+
+  const laptops = JSON.parse(savedResults);
+
+  const resultsDiv = document.getElementById("laptopResults");
+  const resultCount = document.getElementById("resultCount");
+
+  resultsDiv.innerHTML = "";
+
+  if (resultType === "recommend") {
+
+    resultCount.innerHTML = `Showing ${laptops.length} recommended laptops`;
+
+    laptops.forEach((laptop, index) => {
+      resultsDiv.innerHTML += createLaptopCard(laptop, true, index);
+    });
+
+  }
+
+  else if (resultType === "filter") {
+
+    resultCount.innerHTML = `Showing ${laptops.length} laptops`;
+
+    laptops.forEach(laptop => {
+      resultsDiv.innerHTML += createLaptopCard(laptop);
+    });
+
+  }
+
+});
+
+//Restore Recommendation Answers
+const savedRecommend = localStorage.getItem("recommendAnswers");
+
+if (savedRecommend) {
+
+  const data = JSON.parse(savedRecommend);
+
+  const purposeRadio =
+    document.querySelector(`input[name="purpose"][value="${data.purpose}"]`);
+
+  if (purposeRadio) purposeRadio.checked = true;
+
+  document.getElementById("recommendBudget").value = data.budget || "";
+  document.getElementById("recommendRam").value = data.ram || "any";
+  document.getElementById("recommendDisplay").value = data.displaySize || "";
+
+  const portRadio =
+    document.querySelector(`input[name="portability"][value="${data.portability}"]`);
+
+  if (portRadio) portRadio.checked = true;
+
+}
+//Restore Filter Preferences
+const savedPref = localStorage.getItem("preferences");
+
+if (savedPref) {
+
+  const pref = JSON.parse(savedPref);
+
+  // restore brand
+  pref.brands?.forEach(b => {
+    const cb = document.querySelector(`#brandList input[value="${b}"]`);
+    if (cb) cb.checked = true;
+  });
+
+  // restore RAM
+  pref.ram?.forEach(r => {
+    const cb = document.querySelector(`#ramList input[value="${r}"]`);
+    if (cb) cb.checked = true;
+  });
+
+  // restore memory
+  pref.memory?.forEach(m => {
+    const cb = document.querySelector(`#memoryList input[value="${m}"]`);
+    if (cb) cb.checked = true;
+  });
+
+  // restore price
+  if (pref.priceLimit) {
+    document.getElementById("priceInput").value = pref.priceLimit;
+  }
 
 }
 
