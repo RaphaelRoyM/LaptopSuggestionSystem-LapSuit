@@ -9,6 +9,11 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+
+// ✅ Correct CSV path (make sure file is inside /data folder)
+const csvPath = path.join(__dirname, "data", "laptops_Dataset.csv");
+
+//csv loader
 loadCSV().then(() => {
 
   app.listen(PORT, () => {
@@ -23,8 +28,7 @@ app.use(express.static("public"));
 
 let laptops = [];
 
-// ✅ Correct CSV path (make sure file is inside /data folder)
-const csvPath = path.join(__dirname, "data", "laptops_Dataset.csv");
+
 
 // Read CSV
 function loadCSV() {
