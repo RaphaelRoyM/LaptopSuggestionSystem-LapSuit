@@ -5,8 +5,10 @@ const path = require("path");
 const csv = require("csv-parser");
 
 const app = express();
-const PORT = 3000;
-
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
 app.use(express.json());
 app.use(express.static("public"));
 
@@ -16,17 +18,26 @@ let laptops = [];
 const csvPath = path.join(__dirname, "data", "laptops_Dataset.csv");
 
 // Read CSV
-fs.createReadStream(csvPath)
-  .pipe(csv())
-  .on("data", (row) => {
-    laptops.push(row);
-  })
-  .on("end", () => {
-    console.log("CSV Loaded Successfully");
-  })
-  .on("error", (err) => {
-    console.error("Error loading CSV:", err.message);
+function loadCSV() {
+  return new Promise((resolve, reject) => {
+
+    const temp = [];
+
+    fs.createReadStream(csvPath)
+      .pipe(csv())
+      .on("data", (row) => temp.push(row))
+      .on("end", () => {
+        laptops = temp;
+        console.log("CSV Loaded Successfully:", laptops.length, "records");
+        resolve();
+      })
+      .on("error", (err) => {
+        console.error("CSV Load Error:", err.message);
+        resolve(); // server still runs even if CSV fails
+      });
+
   });
+}
 
 
 function getDisplaySize(displayText) {
