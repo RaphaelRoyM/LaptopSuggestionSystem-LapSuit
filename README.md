@@ -336,6 +336,7 @@ http://localhost:3000
   - Images are placeholders from Unsplash.
   - No user authentication.
   - No database (uses CSV).
+  - lack of time to do this project because of the major project and temporary health issues , i could not test every test cases. sometimes the css looks like it need fix.
 
 <!-- Future Improvements -->
 
@@ -367,9 +368,12 @@ Side-by-side.
 
 **What I Learned**
 This project helped me understand:
-    - Data cleaning challenges
-    - Backend filtering logic
-    - Designing recommendation systems
-    - Building dynamic user interfaces
-    - Structuring a full-stack application
+    - Data cleaning challenges.
+    - Backend filtering logic.
+    - Designing recommendation systems.
+    - Building dynamic user interfaces.
+    - Structuring a full-stack application.
+    - create System diagrams.
+    - my weaknesses.
+    - how to work efficiently.
 More importantly, it helped me practice thinking about real user problems rather than just writing code.
