@@ -121,6 +121,8 @@ LaptopRecommendationBot
 │       └── script.js
 │
 ├── Design Diagrams
+│       │── Architechtural_Diagram.png
+│       └──DataFlowDiagram.png
 │
 ├── BUILD_PROCESS.md
 │
